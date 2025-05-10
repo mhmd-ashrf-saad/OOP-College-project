@@ -34,11 +34,14 @@ public:
 
     void displayCourse() const
     {
-        cout << "Course ID: " << courseID << ", Title: " << title << endl;
+        cout << "\nCourse ID: " << courseID << ", Title: " << title << endl;
         for (auto &lesson : lessons)
         {
             lesson.displayLesson();
         }
+        cout << "\n------------------------\n";
+
+        cout << endl;
     }
 
     string getCourseID() { return courseID; }
@@ -75,6 +78,15 @@ public:
     }
 
     virtual string getRole() const = 0;
+
+    void showInfo() const
+    {
+        cout << "\n--- User Information ---\n";
+        cout << "Username: " << username << endl;
+        cout << "Name: " << name << endl;
+        cout << "Role: " << getRole() << endl;
+        cout << "------------------------\n";
+    }
 };
 
 class Student : virtual public User
@@ -95,6 +107,22 @@ public:
         cout << "--- Enrolled Courses for " << name << " ---\n";
         for (auto c : enrolledCourses)
             c->displayCourse();
+    }
+
+    void showCourses() const
+    {
+        cout << "\n--- Enrolled Courses for " << name << " ---\n";
+        if (enrolledCourses.empty())
+        {
+            cout << "No courses enrolled.\n";
+            return;
+        }
+
+        for (const auto &course : enrolledCourses)
+        {
+            course->displayCourse();
+            cout << "------------------------\n";
+        }
     }
 
     void displayProfile() override
@@ -165,7 +193,7 @@ public:
         for (const auto &course : courses)
         {
             course.displayCourse();
-            cout << "------------------------\n";
+            cout << "\n------------------------\n";
         }
     }
 };
@@ -335,7 +363,8 @@ int main()
             int choice;
             do
             {
-                cout << "\n1. View Courses\n2. Enroll in Course\n3. View Enrolled Courses\n0. Logout\nChoice: ";
+                cout << "\n1. View Courses\n2. Enroll in Course\n3. View Enrolled Courses\n"
+                     << "4. Show My Information\n0. Logout\nChoice: ";
                 cin >> choice;
                 if (choice == 1)
                 {
@@ -358,7 +387,11 @@ int main()
                 }
                 else if (choice == 3)
                 {
-                    s->viewEnrolledCourses();
+                    s->showCourses();
+                }
+                else if (choice == 4)
+                {
+                    s->showInfo();
                 }
             } while (choice != 0);
         }
@@ -368,7 +401,8 @@ int main()
             int choice;
             do
             {
-                cout << "\n1. Add Course\n2. Show All Courses\n0. Logout\nChoice: ";
+                cout << "\n1. Add Course\n2. Show All Courses\n"
+                     << "3. Show My Information\n0. Logout\nChoice: ";
                 cin >> choice;
                 if (choice == 1)
                 {
@@ -378,6 +412,10 @@ int main()
                 {
                     ins->showCourses(courses);
                 }
+                else if (choice == 3)
+                {
+                    ins->showInfo();
+                }
             } while (choice != 0);
         }
         else if (loggedIn->getRole() == "Admin")
@@ -386,7 +424,8 @@ int main()
             int choice;
             do
             {
-                cout << "\n1. Add User\n2. Reset Password\n3. Show All Courses\n0. Logout\nChoice: ";
+                cout << "\n1. Add User\n2. Reset Password\n3. Show All Courses\n"
+                     << "4. Show My Information\n0. Logout\nChoice: ";
                 cin >> choice;
                 if (choice == 1)
                 {
@@ -409,6 +448,10 @@ int main()
                 {
                     a->showCourses(courses);
                 }
+                else if (choice == 4)
+                {
+                    a->showInfo();
+                }
             } while (choice != 0);
         }
         else
@@ -417,7 +460,7 @@ int main()
         }
     }
 
-    cout << "Exiting system.\n";
+    cout << "Exiting system...\n";
 
     for (auto u : users)
         delete u;
