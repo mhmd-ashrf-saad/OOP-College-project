@@ -1,309 +1,27 @@
 #include <iostream>
 #include <vector>
 #include <string>
-using namespace std;
+#include "User.h"
+#include "Student.h"
+#include "Instructor.h"
+#include "TeachingAssistant.h"
+#include "Admin.h"
+#include "Course.h"
 
-class Lesson
+bool loginSystem(std::vector<User *> &users, User *&loggedInUser)
 {
-private:
-    string lessonTitle;
-    string content;
-
-public:
-    Lesson(string title = "", string cont = "") : lessonTitle(title), content(cont) {}
-
-    void displayLesson() const
-    {
-        cout << "Lesson: " << lessonTitle << "\nContent: " << content << endl;
-    }
-};
-
-class Course
-{
-private:
-    string courseID, title;
-    vector<Lesson> lessons;
-
-public:
-    Course(string id = "", string t = "") : courseID(id), title(t) {}
-
-    void addLesson(string title, string content)
-    {
-        lessons.push_back(Lesson(title, content));
-    }
-
-    void displayCourse() const
-    {
-        cout << "\nCourse ID: " << courseID << ", Title: " << title << endl;
-        for (auto &lesson : lessons)
-        {
-            lesson.displayLesson();
-        }
-        cout << "\n------------------------\n";
-
-        cout << endl;
-    }
-
-    string getCourseID() { return courseID; }
-
-    friend class Student;
-};
-
-class User
-{
-protected:
-    string username, password, name;
-
-public:
-    User(string u = "", string p = "", string n = "") : username(u), password(p), name(n) {}
-
-    virtual void displayProfile()
-    {
-        cout << "Name: " << name << ", Username: " << username << endl;
-    }
-
-    bool login(string u, string p)
-    {
-        return username == u && password == p;
-    }
-
-    void setPassword(string newPass)
-    {
-        password = newPass;
-    }
-
-    string getUsername() const
-    {
-        return username;
-    }
-
-    virtual string getRole() const = 0;
-
-    void showInfo() const
-    {
-        cout << "\n--- User Information ---\n";
-        cout << "Username: " << username << endl;
-        cout << "Name: " << name << endl;
-        cout << "Role: " << getRole() << endl;
-        cout << "------------------------\n";
-    }
-};
-
-class Student : virtual public User
-{
-private:
-    vector<Course *> enrolledCourses;
-
-public:
-    Student(string u, string p, string n) : User(u, p, n) {}
-
-    void enroll(Course *course)
-    {
-        enrolledCourses.push_back(course);
-    }
-
-    void viewEnrolledCourses()
-    {
-        cout << "--- Enrolled Courses for " << name << " ---\n";
-        for (auto c : enrolledCourses)
-            c->displayCourse();
-    }
-
-    void showCourses() const
-    {
-        cout << "\n--- Enrolled Courses for " << name << " ---\n";
-        if (enrolledCourses.empty())
-        {
-            cout << "No courses enrolled.\n";
-            return;
-        }
-
-        for (const auto &course : enrolledCourses)
-        {
-            course->displayCourse();
-            cout << "------------------------\n";
-        }
-    }
-
-    void displayProfile() override
-    {
-        cout << "[Student] ";
-        User::displayProfile();
-    }
-
-    string getRole() const override
-    {
-        return "Student";
-    }
-};
-
-class Instructor : virtual public User
-{
-public:
-    Instructor(string u, string p, string n) : User(u, p, n) {}
-
-    void displayProfile() override
-    {
-        cout << "[Instructor] ";
-        User::displayProfile();
-    }
-
-    string getRole() const override
-    {
-        return "Instructor";
-    }
-
-    void addCourse(vector<Course> &courses)
-    {
-        string id, title;
-        cout << "Enter Course ID: ";
-        cin >> id;
-        cout << "Enter Course Title: ";
-        cin.ignore();
-        getline(cin, title);
-        Course newCourse(id, title);
-
-        int lessonCount;
-        cout << "How many lessons? ";
-        cin >> lessonCount;
-        cin.ignore();
-        for (int i = 0; i < lessonCount; i++)
-        {
-            string lt, lc;
-            cout << "Enter Lesson Title: ";
-            getline(cin, lt);
-            cout << "Enter Lesson Content: ";
-            getline(cin, lc);
-            newCourse.addLesson(lt, lc);
-        }
-
-        courses.push_back(newCourse);
-        cout << "Course added successfully.\n";
-    }
-
-    void showCourses(const vector<Course> &courses)
-    {
-        cout << "\n--- All Courses ---\n";
-        if (courses.empty())
-        {
-            cout << "No courses available.\n";
-            return;
-        }
-
-        for (const auto &course : courses)
-        {
-            course.displayCourse();
-            cout << "\n------------------------\n";
-        }
-    }
-};
-
-class TeachingAssistant : public Student, public Instructor
-{
-public:
-    TeachingAssistant(string u, string p, string n)
-        : User(u, p, n), Student(u, p, n), Instructor(u, p, n) {}
-
-    void displayProfile() override
-    {
-        cout << "[Teaching Assistant] ";
-        User::displayProfile();
-    }
-
-    string getRole() const override
-    {
-        return "TA";
-    }
-};
-
-class Admin : public User
-{
-public:
-    Admin(string u, string p, string n) : User(u, p, n) {}
-
-    void displayProfile() override
-    {
-        cout << "[Admin] ";
-        User::displayProfile();
-    }
-
-    string getRole() const override
-    {
-        return "Admin";
-    }
-
-    void resetPassword(User &u, string newPass)
-    {
-        u.setPassword(newPass);
-        cout << "Password changed for " << u.getUsername() << endl;
-    }
-
-    void addUser(vector<User *> &users)
-    {
-        int type;
-        string u, p, n;
-        cout << "Enter username: ";
-        cin >> u;
-        cout << "Enter password: ";
-        cin >> p;
-        cout << "Enter name: ";
-        cin.ignore();
-        getline(cin, n);
-        cout << "User type (1-Student, 2-Instructor, 3-TA, 4-Admin): ";
-        cin >> type;
-
-        switch (type)
-        {
-        case 1:
-            users.push_back(new Student(u, p, n));
-            break;
-        case 2:
-            users.push_back(new Instructor(u, p, n));
-            break;
-        case 3:
-            users.push_back(new TeachingAssistant(u, p, n));
-            break;
-        case 4:
-            users.push_back(new Admin(u, p, n));
-            break;
-        default:
-            cout << "Invalid type.\n";
-        }
-
-        cout << "User added.\n";
-    }
-
-    void showCourses(const vector<Course> &courses)
-    {
-        cout << "\n--- All Courses ---\n";
-        if (courses.empty())
-        {
-            cout << "No courses available.\n";
-            return;
-        }
-
-        for (const auto &course : courses)
-        {
-            course.displayCourse();
-            cout << "------------------------\n";
-        }
-    }
-};
-
-bool loginSystem(vector<User *> &users, User *&loggedInUser)
-{
-    string u, p;
-    cout << "\n--- Login Page ---\n";
-    cout << "1. Login\n0. Exit\nChoice: ";
+    std::string u, p;
+    std::cout << "\n--- Login Page ---\n";
+    std::cout << "1. Login\n0. Exit\nChoice: ";
     int option;
-    cin >> option;
+    std::cin >> option;
     if (option == 0)
         return false;
 
-    cout << "Username: ";
-    cin >> u;
-    cout << "Password: ";
-    cin >> p;
+    std::cout << "Username: ";
+    std::cin >> u;
+    std::cout << "Password: ";
+    std::cin >> p;
 
     for (auto user : users)
     {
@@ -313,14 +31,14 @@ bool loginSystem(vector<User *> &users, User *&loggedInUser)
             return true;
         }
     }
-    cout << "Invalid credentials.\n";
+    std::cout << "Invalid credentials.\n";
     return true;
 }
 
 int main()
 {
-    vector<User *> users;
-    vector<Course> courses;
+    std::vector<User *> users;
+    std::vector<Course> courses;
 
     Student *s1 = new Student("std1", "123", "Ali");
     Instructor *ins1 = new Instructor("ins1", "123", "Dr. Ahmed");
@@ -343,7 +61,7 @@ int main()
     courses.push_back(c1);
     courses.push_back(c2);
 
-    cout << "Welcome to the Course Management System\n";
+    std::cout << "Welcome to the Course Management System\n";
 
     while (true)
     {
@@ -355,7 +73,7 @@ int main()
         if (loggedIn == nullptr)
             continue;
 
-        cout << "Login successful as " << loggedIn->getRole() << "\n";
+        std::cout << "Login successful as " << loggedIn->getRole() << "\n";
 
         if (loggedIn->getRole() == "Student")
         {
@@ -363,9 +81,9 @@ int main()
             int choice;
             do
             {
-                cout << "\n1. View Courses\n2. Enroll in Course\n3. View Enrolled Courses\n"
-                     << "4. Show My Information\n0. Logout\nChoice: ";
-                cin >> choice;
+                std::cout << "\n1. View Courses\n2. Enroll in Course\n3. View Enrolled Courses\n"
+                          << "4. Show My Information\n0. Logout\nChoice: ";
+                std::cin >> choice;
                 if (choice == 1)
                 {
                     for (auto &c : courses)
@@ -373,15 +91,15 @@ int main()
                 }
                 else if (choice == 2)
                 {
-                    string id;
-                    cout << "Enter Course ID: ";
-                    cin >> id;
+                    std::string id;
+                    std::cout << "Enter Course ID: ";
+                    std::cin >> id;
                     for (auto &c : courses)
                     {
                         if (c.getCourseID() == id)
                         {
                             s->enroll(&c);
-                            cout << "Enrolled successfully.\n";
+                            std::cout << "Enrolled successfully.\n";
                         }
                     }
                 }
@@ -401,9 +119,9 @@ int main()
             int choice;
             do
             {
-                cout << "\n1. Add Course\n2. Show All Courses\n"
-                     << "3. Show My Information\n0. Logout\nChoice: ";
-                cin >> choice;
+                std::cout << "\n1. Add Course\n2. Show All Courses\n"
+                          << "3. Show My Information\n0. Logout\nChoice: ";
+                std::cin >> choice;
                 if (choice == 1)
                 {
                     ins->addCourse(courses);
@@ -424,18 +142,18 @@ int main()
             int choice;
             do
             {
-                cout << "\n1. Add User\n2. Reset Password\n3. Show All Courses\n"
-                     << "4. Show My Information\n0. Logout\nChoice: ";
-                cin >> choice;
+                std::cout << "\n1. Add User\n2. Reset Password\n3. Show All Courses\n"
+                          << "4. Show My Information\n0. Logout\nChoice: ";
+                std::cin >> choice;
                 if (choice == 1)
                 {
                     a->addUser(users);
                 }
                 else if (choice == 2)
                 {
-                    string uname;
-                    cout << "Enter username to reset password: ";
-                    cin >> uname;
+                    std::string uname;
+                    std::cout << "Enter username to reset password: ";
+                    std::cin >> uname;
                     for (auto u : users)
                     {
                         if (u->getUsername() == uname)
@@ -460,7 +178,7 @@ int main()
         }
     }
 
-    cout << "Exiting system...\n";
+    std::cout << "Exiting system...\n";
 
     for (auto u : users)
         delete u;
